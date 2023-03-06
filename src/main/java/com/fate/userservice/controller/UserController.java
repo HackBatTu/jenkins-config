@@ -33,9 +33,7 @@ public class UserController {
     }
     public ResponseEntity<User> ratingHotelFallback(Long userId, Exception ex) {
 //        logger.info("Fallback is executed because service is down : ", ex.getMessage());
-
         ex.printStackTrace();
-
         User user = User.builder().email("dummy@gmail.com").name("Dummy").about("This user is created dummy because some service is down").id(1l).build();
         return new ResponseEntity<>(user, HttpStatus.BAD_REQUEST);
     }
