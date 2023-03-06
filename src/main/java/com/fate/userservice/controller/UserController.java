@@ -15,6 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api")
 public class UserController {
+
     @Autowired
     UserService userService;
 
@@ -23,6 +24,7 @@ public class UserController {
         User user1 = userService.saveUser(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(user1);
     }
+
     @GetMapping("/findById/{userId}")
     @CircuitBreaker(name = "ratingHotelBreaker", fallbackMethod = "ratingHotelFallback")
     @Retry(name = "ratingHotelService", fallbackMethod = "ratingHotelFallback")
