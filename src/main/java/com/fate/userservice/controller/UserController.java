@@ -31,14 +31,8 @@ public class UserController {
         User user = userService.getUser(userId);
         return ResponseEntity.ok(user);
     }
-    public ResponseEntity<User> ratingHotelFallback(Long userId, Exception ex) {
-//        logger.info("Fallback is executed because service is down : ", ex.getMessage());
-        ex.printStackTrace();
-        User user = User.builder().email("dummy@gmail.com").name("Dummy").about("This user is created dummy because some service is down").id(1l).build();
-        return new ResponseEntity<>(user, HttpStatus.BAD_REQUEST);
-    }
 
-    
+
     @GetMapping("/findAll")
     public ResponseEntity<List<User>> findAll(){
         List<User> userList = userService.getAllUser();
