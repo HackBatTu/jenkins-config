@@ -12,27 +12,5 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Prepare job
-      run: |
-        # add any necessary setup commands here
-
-    - name: Initialize job
-      run: |
-        # add any necessary setup commands here
-
-    - name: Checkout code
-      uses: actions/checkout@v2
-
-    - name: Finalize Job
-      run: |
-        # add any necessary cleanup commands here
-
-    - name: Report build status
-      if: always()
-      uses: actions/github-script@v4
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        script: |
-          github.checks.create({
-            ... // add any necessary check parameters here
-          })
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v3.1.2
