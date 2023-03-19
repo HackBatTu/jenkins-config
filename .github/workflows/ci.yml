@@ -18,6 +18,7 @@ jobs:
         uses: actions/setup-java@v2
         with:
           java-version: 11
+          distribution: adopt
 
       - name: Install Apache Maven
         run: sudo apt-get install -y maven
