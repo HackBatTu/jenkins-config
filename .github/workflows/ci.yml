@@ -15,7 +15,9 @@ jobs:
       uses: actions/setup-java@v3.10.0
       with:
         java-version: 11
+        distribution: adopt
         java-package: jdk
-
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v3.1.2
+      with:
+        distribution: adopt
