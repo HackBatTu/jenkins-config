@@ -9,22 +9,10 @@ jobs:
     steps:
       - name: Clean pom.xml
         uses: maven@3
-        with:
-          args: 'clean'
-          directory: ${{ env.MAVEN_DIRECTORY }}
       - name: Compile pom.xml
         uses: maven@3
-        with:
-          args: 'compile'
-          directory: ${{ env.MAVEN_DIRECTORY }}
       - name: Install pom.xml
         uses: maven@3
-        with:
-          args: 'install'
-          directory: ${{ env.MAVEN_DIRECTORY }}
       - name: Deploy pom.xml
         if: ${{ github.event_name != 'pull_request' }}
         uses: maven@3
-        with:
-          args: 'deploy'
-          directory: ${{ env.MAVEN_DIRECTORY }}
