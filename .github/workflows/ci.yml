@@ -8,11 +8,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Clean pom.xml
-        uses: maven@3
+        run: mvn clean
       - name: Compile pom.xml
-        uses: maven@3
+        run: mvn compile
       - name: Install pom.xml
-        uses: maven@3
+        run: mvn install
       - name: Deploy pom.xml
         if: ${{ github.event_name != 'pull_request' }}
-        uses: maven@3
+        run: mvn deploy
