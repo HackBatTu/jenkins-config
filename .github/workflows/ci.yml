@@ -30,10 +30,6 @@ jobs:
       - name: Compile pom.xml
         run: mvn compile
 
-      - name: Deploy pom.xml
-        if: ${{ github.event_name != 'pull_request' }}
-        run: mvn deploy
-
       # Post-job steps
       - name: Checkout code again
         uses: actions/checkout@v2
