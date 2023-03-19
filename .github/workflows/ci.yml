@@ -20,18 +20,6 @@ jobs:
       run: |
         # add any necessary setup commands here
 
-    - name: Clean pom.xml
-      run: mvn clean
-
-    - name: Compile pom.xml
-      run: mvn compile
-
-    - name: Install pom.xml
-      run: mvn install
-
-    - name: Deploy pom.xml
-      run: mvn deploy
-
     - name: Checkout code
       uses: actions/checkout@v2
 
