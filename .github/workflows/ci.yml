@@ -1,24 +1,59 @@
-name: Java Build and Deploy
-
+name: Maven Build and Deploy
 on:
   push:
-    branches: [master]
+    branches:
+      - master
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-    - name: Setup Java JDK
-      uses: actions/setup-java@v3.10.0
-      with:
-        java-version: 11
-        distribution: adopt
-        java-package: jdk
-    - name: Upload artifact
-      uses: actions/upload-artifact@v3.1.2
-      with:
-       name: my-artifact
-       path: path/to/my/artifact
+      # Prepare job
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Initialize job
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: 11
+
+      - name: Install Apache Maven
+        run: sudo apt-get install -y maven
+
+      # Build and deploy steps
+      - name: Clean pom.xml
+        run: mvn clean
+
+      - name: Compile pom.xml
+        run: mvn compile
+
+      - name: Install pom.xml
+        run: mvn install
+
+      - name: Deploy pom.xml
+        if: ${{ github.event_name != 'pull_request' }}
+        run: mvn deploy
+
+      # Post-job steps
+      - name: Checkout code again
+        uses: actions/checkout@v2
+
+      # Finalize job
+      - name: Report build status
+        uses: actions/github-script@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const conclusion = '${{ job.status }}' === 'success' ? 'success' : 'failure';
+            const body = 'The build finished with ' + conclusion + '.';
+            github.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.sha,
+              state: conclusion,
+              target_url: 'https://example.com/build/results',
+              description: body,
+              context: 'build'
+            });
