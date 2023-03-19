@@ -5,7 +5,7 @@ on:
       - master
 jobs:
   build-and-deploy:
-    runs-on: 'IMT Servers'
+    runs-on: 'ubuntu-latest'
     steps:
       - name: Clean pom.xml
         uses: maven@3
