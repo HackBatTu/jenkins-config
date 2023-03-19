@@ -1,33 +1,30 @@
-name: Java Maven CI
-
+name: Maven Build and Deploy
 on:
   push:
     branches:
       - master
-  pull_request:
-    branches:
-      - master
-
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
+  build-and-deploy:
+    runs-on: 'IMT Servers'
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-      
-    - name: Set up JDK 11
-      uses: actions/setup-java@v1
-      with:
-        java-version: 11
-          
-    - name: Set up Maven
-      uses: actions/setup-node@v1
-      with:
-        node-version: '12.x'
-        
-    - name: Build with Maven
-      run: mvn clean install
-
-    - name: Test with Maven
-      run: mvn test
+      - name: Clean pom.xml
+        uses: maven@3
+        with:
+          args: 'clean'
+          directory: ${{ env.MAVEN_DIRECTORY }}
+      - name: Compile pom.xml
+        uses: maven@3
+        with:
+          args: 'compile'
+          directory: ${{ env.MAVEN_DIRECTORY }}
+      - name: Install pom.xml
+        uses: maven@3
+        with:
+          args: 'install'
+          directory: ${{ env.MAVEN_DIRECTORY }}
+      - name: Deploy pom.xml
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: maven@3
+        with:
+          args: 'deploy'
+          directory: ${{ env.MAVEN_DIRECTORY }}
