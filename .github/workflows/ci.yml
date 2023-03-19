@@ -30,9 +30,6 @@ jobs:
       - name: Compile pom.xml
         run: mvn compile
 
-      - name: Install pom.xml
-        run: mvn install
-
       - name: Deploy pom.xml
         if: ${{ github.event_name != 'pull_request' }}
         run: mvn deploy
