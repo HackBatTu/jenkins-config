@@ -1,109 +1,53 @@
-name: CI
-
+name: Maven Build and Deploy
 on:
-  pull_request: # all pull requests
   push:
     branches:
       - master
 
 jobs:
-  oracle:
-    strategy:
-      matrix:
-        java: [ '11' ]
-    runs-on: 'ubuntu-latest'
-    env:
-      MVN_CMD: ./mvnw --no-transfer-progress -B
-    name: jdk-${{ matrix.java }}-oracle
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up JDK
-        uses: oracle-actions/setup-java@v1
-        with:
-          release: ${{ matrix.java }}
-      - name: Build
-        # run a full build, just as we would for a release (i.e. the `ossrh` profile), but don't use gpg
-        # to sign artifacts, since we don't want to mess with storing signing credentials in CI:
-        run: ${{env.MVN_CMD}} verify -Possrh -Dgpg.skip=true
+  build-and-deploy:
+    runs-on: ubuntu-latest
 
-  temurin:
-    strategy:
-      matrix:
-        java: [ '11' ]
-    runs-on: 'ubuntu-latest'
-    env:
-      MVN_CMD: ./mvnw --no-transfer-progress -B
-    name: jdk-${{ matrix.java }}-temurin
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up JDK
-        uses: actions/setup-java@v3
-        with:
-          java-version: ${{ matrix.java }}
-          distribution: 'temurin'
-          cache: 'maven'
-          check-latest: true
-      - name: Build
-        # run a full build, just as we would for a release (i.e. the `ossrh` profile), but don't use gpg
-        # to sign artifacts, since we don't want to mess with storing signing credentials in CI:
-        run: ${{env.MVN_CMD}} verify -Possrh -Dgpg.skip=true
+      # Prepare job
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-  zulu:
-    strategy:
-      matrix:
-        java: [ '11' ]
-    runs-on: 'ubuntu-latest'
-    env:
-      MVN_CMD: ./mvnw --no-transfer-progress -B
-      JDK_MAJOR_VERSION: ${{ matrix.java }}
-    name: jdk-${{ matrix.java }}-zulu
-    steps:
-      - uses: actions/checkout@v3
+      # Initialize job
       - name: Set up JDK
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v2
         with:
-          java-version: ${{ matrix.java }}
-          distribution: 'zulu'
-          cache: 'maven'
-          check-latest: true
-      - name: Build
-        # run a full build, just as we would for a release (i.e. the `ossrh` profile), but don't use gpg
-        # to sign artifacts, since we don't want to mess with storing signing credentials in CI:
-        run: |
-          if [ "$JDK_MAJOR_VERSION" == "7" ]; then export MAVEN_OPTS="-Xmx512m -XX:MaxPermSize=128m"; fi
-          ${{env.MVN_CMD}} verify -Possrh -Dgpg.skip=true
-  code-coverage:
-    # (commented out for now - see the comments in 'Wait to start' below for why.  Keeping this here as a placeholder
-    # as it may be better to use instead of an artificial delay once we no longer need to build on JDK 7):
-    #needs: zulu # wait until others finish so a coverage failure doesn't cancel others accidentally
-    runs-on: 'ubuntu-latest'
-    env:
-      MVN_CMD: ./mvnw --no-transfer-progress -B
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up JDK
-        uses: actions/setup-java@v3
+          java-version: 11
+          distribution: adopt
+
+      - name: Install Apache Maven
+        run: sudo apt-get install -y maven
+
+      # Build and deploy steps
+      - name: Clean pom.xml
+        run: mvn clean
+
+      - name: Compile pom.xml
+        run: mvn compile
+
+      # Post-job steps
+      - name: Checkout code again
+        uses: actions/checkout@v2
+
+      # Finalize job
+      - name: Report build status
+        uses: actions/github-script@v4
         with:
-          distribution: 'zulu'
-          java-version: '8'
-          cache: 'maven'
-          check-latest: true
-      - name: Wait to start
-        # wait a little to start: code coverage usually only takes about 1 1/2 minutes.  If coverage fails, it will
-        # cancel the other running builds, and we don't want that (because we want to see if jobs fail due to
-        # build issues, not due to the code-coverage job causing the others to cancel).  We could have used the
-        # 'need' property (commented out above), and that would wait until all the other jobs have finished before
-        # starting this one, but that introduces unnecessary (sometimes 2 1/2 minute) delay, whereas delaying the
-        # start of the code coverage checks a bit should allow everything to finish around the same time without having
-        # much of an adverse effect on the other jobs above.
-        run: sleep 90s
-        shell: bash
-      - name: Code Coverage
-        # run a full build, just as we would for a release (i.e. the `ossrh` profile), but don't use gpg
-        # to sign artifacts, since we don't want to mess with storing signing credentials in CI:
-        run: |
-          ${{env.MVN_CMD}} clover:setup test && \
-            ${{env.MVN_CMD}} -pl . clover:clover clover:check coveralls:report \
-              -DrepoToken="${{ secrets.GITHUB_TOKEN }}" \
-              -DserviceName=github \
-              -DserviceBuildNumber="${{ env.GITHUB_RUN_ID }}"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const conclusion = '${{ job.status }}' === 'success' ? 'success' : 'failure';
+            const body = 'The build finished with ' + conclusion + '.';
+            github.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.sha,
+              state: conclusion,
+              target_url: 'https://example.com/build/results',
+              description: body,
+              context: 'build'
+            });
